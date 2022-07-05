@@ -1,0 +1,108 @@
+<html>
+	<head>
+		<title>Pacman Clone</title>
+		<style>
+			body {
+				margin:0px;
+			}
+			canvas {
+				width: 100%;
+				height: 100%;
+				background-color: transparent;
+			}
+		</style>
+	</head>
+	<body>
+		<img style="display: none;" src="red.png" id="red" />
+		<img style="display: none;" src="blue.png" id="blue" />
+		<img style="display: none;" src="green.png" id="green" />
+		<img style="display: none;" src="bg.png" id="bg" />
+		<canvas></canvas>
+		<script>
+			let canvas = document.getElementsByTagName("canvas")[0];
+			let ctx = canvas.getContext("2d");
+			ctx.canvas.width = screen.width;
+			ctx.canvas.height = screen.height;
+			
+			document.addEventListener("keydown", kde);
+			
+			let x = 20;
+			let y = 20;
+			let g1_x = Math.random() * canvas.width;
+			let g1_y = Math.random() * canvas.height;
+			let g2_x = Math.random() * canvas.width;
+			let g2_y = Math.random() * canvas.height;
+			let g3_x = Math.random() * canvas.width;
+			let g3_y = Math.random() * canvas.height;
+			
+			function kde(e) {
+				if(e.key =='w')
+					y -= 12;
+				if(e.key =='s')
+					y += 12;
+				if(e.key =='a')
+					x -= 12;
+				if(e.key =='d')
+					x += 12;
+					
+				if(x < 20)
+					x = 20;
+				else if(x > canvas.width - 20)
+					x = canvas.width - 20;
+				if(y < 20)
+					y = 20;
+				else if(y > canvas.height - 20)
+					y = canvas.height - 20;
+				drawAll();
+			}
+			
+			function drawAll() {
+				ctx.clearRect(0,0,canvas.width,canvas.height);
+				var bg = document.getElementById("bg");
+				ctx.beginPath();
+				ctx.drawImage(bg, 0, 0, canvas.width,canvas.height);
+				
+				ctx.beginPath();
+				ctx.fillStyle = "#FFFF00";
+				ctx.arc(x,y,20, 0, 2 * Math.PI, false);
+				ctx.fill();
+				
+				ctx.beginPath();
+				ctx.fillStyle = "#000000";
+				ctx.moveTo(x,y);
+				ctx.lineTo(x + 20, y - 10);
+				ctx.lineTo(x + 20, y + 10);
+				ctx.fill();
+				
+				var red_g = document.getElementById("red");
+				var blue_g = document.getElementById("blue");
+				var green_g = document.getElementById("green");
+				
+				ctx.beginPath();
+				ctx.drawImage(red_g, g1_x, g1_y, 25,25);
+				ctx.beginPath();
+				ctx.drawImage(blue_g, g2_x, g2_y, 25,25);
+				ctx.beginPath();
+				ctx.drawImage(green_g, g3_x, g3_y, 25,25);
+			}
+			
+			setInterval((e) => {
+				g1_x += Math.sign(x - g1_x) * 5;
+				g1_y += Math.sign(y - g1_y) * 5;
+				
+				g2_x += Math.sign(x - g2_x) * 5;
+				g2_y += Math.sign(y - g2_y) * 5;
+				if(Math.abs(g1_x - g2_x) < 25 && Math.abs(g1_x - g2_x) > 0 && Math.abs(g1_y - g2_y) < 25 && Math.abs(g1_y - g2_y) > 0)
+					g2_y += 30;
+				
+				g3_x += Math.sign(x - g3_x) * 5;
+				g3_y += Math.sign(y - g3_y) * 5;
+				if(Math.abs(g1_x - g3_x) < 25 && Math.abs(g1_x - g3_x) > 0 && Math.abs(g1_y - g3_y) < 25 && Math.abs(g1_y - g3_y) > 0)
+					g3_y += 30;
+				if(Math.abs(g2_x - g3_x) < 25 && Math.abs(g2_x - g3_x) > 0 && Math.abs(g2_y - g3_y) < 25 && Math.abs(g2_y - g3_y) > 0)
+					g3_y += 30;
+				drawAll();
+			}, 200);
+		</script>
+	</body>
+</html>
