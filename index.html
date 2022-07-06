@@ -16,62 +16,167 @@
 		<img style="display: none;" src="red.png" id="red" />
 		<img style="display: none;" src="blue.png" id="blue" />
 		<img style="display: none;" src="green.png" id="green" />
-		<img style="display: none;" src="bg.png" id="bg" />
 		<canvas></canvas>
 		<script>
+			function checkRectOverlap(rect1, rect2) {
+				if ((rect1[0][0] < rect2[0][0] && rect2[0][0] < rect1[1][0]) //Event that x3 is inbetween x1 and x2
+					|| (rect1[0][0] < rect2[1][0] && rect2[1][0] < rect1[1][0]) //Event that x4 is inbetween x1 and x2
+					|| (rect2[0][0] < rect1[0][0] && rect1[1][0] < rect2[1][0])) {  //Event that x1 and x2 are inbetween x3 and x4
+
+						if ((rect1[0][1] < rect2[0][1] && rect2[0][1] < rect1[1][1]) //Event that y3 is between y1 and y2
+						|| (rect1[0][1] < rect2[1][1] && rect2[1][1] < rect1[1][1]) //Event that y4 is between y1 and y2
+						|| (rect2[0][1] < rect1[0][1] && rect1[1][1] < rect2[1][1])) { //Event that y1 and y2 are between y3 and y4
+						return true;
+					}
+				}
+				return false;
+			}
+			class Object {
+				constructor(x,y,w,h) {
+					this.x = x;
+					this.y = y;
+					this.w = w;
+					this.h = h;
+				}
+				
+				colliding(ox,oy,ow,oh) {
+					//if((ox + ow >= this.x && oy + oh >= this.y && ox + ow <= this.x + this.w && oy + oh <= this.y + this.h) || (ox >= this.x && oy >= this.y && ox <= this.x + this.w && oy <= this.y + this.h))
+					
+					if(checkRectOverlap([[this.x, this.y],[this.x + this.w, this.y + this.h]],[[ox, oy],[ox + ow, oy + oh]]))
+						return true;
+					return false;
+				}
+			};
+			class PC {
+				constructor(x,y) {
+					this.x = x;
+					this.y = y;
+					this.direction = 0;
+				}
+				
+				changeDirection(dir) {
+					this.direction = dir;
+				}
+				move() {
+					if(this.direction == 0) {
+						if(check(this.x + 5, this.y, 40, 40))
+							this.x += 5;
+					}
+					else if(this.direction == 1) {
+						if(check(this.x, this.y + 5, 40, 40))
+							this.y += 5;
+					}
+					else if(this.direction == 2) {
+						if(check(this.x - 5, this.y, 40, 40))
+							this.x -= 5;
+					}
+					else if(this.direction == 3) {
+						if(check(this.x, this.y - 5, 40, 40))
+							this.y -= 5;
+					}
+				}
+			};
+			class NPC {
+				constructor(x,y) {
+					this.x = x;
+					this.y = y;
+					this.direction = Math.floor(Math.random() * 4);
+				}
+				
+				changeDirection() {
+					let c = false;
+					if(this.direction == 0) {
+						if(check(this.x + 5, this.y, 40, 40))
+							c = true;
+					}
+					else if(this.direction == 1) {
+						if(check(this.x, this.y + 5, 40, 40))
+						c = true;
+					}
+					else if(this.direction == 2) {
+						if(check(this.x - 5, this.y, 40, 40))
+							c = true;
+						}
+					else if(this.direction == 3) {
+						if(check(this.x, this.y - 5, 40, 40))
+							c = true;
+					}
+					
+					if(!c)
+						this.direction = Math.floor(Math.random() * 4);
+				}
+				move() {
+					if(this.direction == 0) {
+						if(check(this.x + 5, this.y, 40, 40))
+							this.x += 5;
+					}
+					else if(this.direction == 1) {
+						if(check(this.x, this.y + 5, 40, 40))
+							this.y += 5;
+					}
+					else if(this.direction == 2) {
+						if(check(this.x - 5, this.y, 40, 40))
+							this.x -= 5;
+					}
+					else if(this.direction == 3) {
+						if(check(this.x, this.y - 5, 40, 40))
+							this.y -= 5;
+					}
+				}
+			};
+			
 			let canvas = document.getElementsByTagName("canvas")[0];
 			let ctx = canvas.getContext("2d");
-			ctx.canvas.width = screen.width;
-			ctx.canvas.height = screen.height;
+			ctx.canvas.width = screen.availWidth;
+			ctx.canvas.height = screen.availHeight;
 			
 			document.addEventListener("keydown", kde);
 			
-			let x = 20;
-			let y = 20;
-			let g1_x = Math.random() * canvas.width;
-			let g1_y = Math.random() * canvas.height;
-			let g2_x = Math.random() * canvas.width;
-			let g2_y = Math.random() * canvas.height;
-			let g3_x = Math.random() * canvas.width;
-			let g3_y = Math.random() * canvas.height;
+			let walls = [new Object(0,0,canvas.width,20),new Object(0,0,20,canvas.height),new Object(0,canvas.height - 20,canvas.width,20),new Object(canvas.width - 20,0,20,canvas.height),new Object(80,80,20,canvas.height-160),new Object(canvas.width-160,80,20,canvas.height-160),new Object(160,160,canvas.width-400,20),new Object(160,canvas.height-160,canvas.width-400,20),new Object(160,240,20,canvas.height-480),new Object(canvas.width-260,240,20,canvas.height-480),new Object(240,240,canvas.width-560,20),new Object(240,canvas.height-260,canvas.width-560,20),new Object(240,400,canvas.width-560,20),new Object(240,canvas.height-420,canvas.width-560,20)];
+			let player = new PC(100,100);
+			let ghost1 = new NPC(Math.random() * canvas.width, Math.random() * canvas.height);
+			let ghost2 = new NPC(Math.random() * canvas.width, Math.random() * canvas.height);
+			let ghost3 = new NPC(Math.random() * canvas.width, Math.random() * canvas.height);
+			
+			function check(x,y,w,h) {
+				let res = true;
+				walls.forEach(wall => {
+					if(wall.colliding(x,y,w,h))
+						res = false;
+				});
+				return res;
+			}
 			
 			function kde(e) {
 				if(e.key =='w')
-					y -= 12;
+					player.changeDirection(3);
 				if(e.key =='s')
-					y += 12;
+					player.changeDirection(1);
 				if(e.key =='a')
-					x -= 12;
+					player.changeDirection(2);
 				if(e.key =='d')
-					x += 12;
-					
-				if(x < 20)
-					x = 20;
-				else if(x > canvas.width - 20)
-					x = canvas.width - 20;
-				if(y < 20)
-					y = 20;
-				else if(y > canvas.height - 20)
-					y = canvas.height - 20;
-				drawAll();
+					player.changeDirection(0);
 			}
 			
 			function drawAll() {
 				ctx.clearRect(0,0,canvas.width,canvas.height);
-				var bg = document.getElementById("bg");
-				ctx.beginPath();
-				ctx.drawImage(bg, 0, 0, canvas.width,canvas.height);
+				
+				walls.forEach((wall) => {
+					ctx.beginPath();
+					ctx.fillStyle = "#333333";
+					ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
+				});
 				
 				ctx.beginPath();
 				ctx.fillStyle = "#FFFF00";
-				ctx.arc(x,y,20, 0, 2 * Math.PI, false);
+				ctx.arc(player.x + 20, player.y + 20, 20, 0, 2 * Math.PI, false);
 				ctx.fill();
 				
 				ctx.beginPath();
-				ctx.fillStyle = "#000000";
-				ctx.moveTo(x,y);
-				ctx.lineTo(x + 20, y - 10);
-				ctx.lineTo(x + 20, y + 10);
+				ctx.fillStyle = "#FFFFFF";
+				ctx.moveTo(player.x + 20,player.y + 20);
+				ctx.lineTo(player.x + 40, player.y + 10);
+				ctx.lineTo(player.x + 40, player.y + 30);
 				ctx.fill();
 				
 				var red_g = document.getElementById("red");
@@ -79,30 +184,26 @@
 				var green_g = document.getElementById("green");
 				
 				ctx.beginPath();
-				ctx.drawImage(red_g, g1_x, g1_y, 25,25);
+				ctx.drawImage(red_g, ghost1.x, ghost1.y, 40,40);
 				ctx.beginPath();
-				ctx.drawImage(blue_g, g2_x, g2_y, 25,25);
+				ctx.drawImage(blue_g, ghost2.x, ghost2.y, 40,40);
 				ctx.beginPath();
-				ctx.drawImage(green_g, g3_x, g3_y, 25,25);
+				ctx.drawImage(green_g, ghost3.x, ghost3.y, 40,40);
 			}
 			
 			setInterval((e) => {
-				g1_x += Math.sign(x - g1_x) * 5;
-				g1_y += Math.sign(y - g1_y) * 5;
+			}, 1500);
+			setInterval((e) => {
+				ghost1.changeDirection();
+				ghost2.changeDirection();
+				ghost3.changeDirection();
 				
-				g2_x += Math.sign(x - g2_x) * 5;
-				g2_y += Math.sign(y - g2_y) * 5;
-				if(Math.abs(g1_x - g2_x) < 25 && Math.abs(g1_x - g2_x) > 0 && Math.abs(g1_y - g2_y) < 25 && Math.abs(g1_y - g2_y) > 0)
-					g2_y += 30;
-				
-				g3_x += Math.sign(x - g3_x) * 5;
-				g3_y += Math.sign(y - g3_y) * 5;
-				if(Math.abs(g1_x - g3_x) < 25 && Math.abs(g1_x - g3_x) > 0 && Math.abs(g1_y - g3_y) < 25 && Math.abs(g1_y - g3_y) > 0)
-					g3_y += 30;
-				if(Math.abs(g2_x - g3_x) < 25 && Math.abs(g2_x - g3_x) > 0 && Math.abs(g2_y - g3_y) < 25 && Math.abs(g2_y - g3_y) > 0)
-					g3_y += 30;
+				ghost1.move();
+				ghost2.move();
+				ghost3.move();
+				player.move();
 				drawAll();
-			}, 200);
+			}, 100);
 		</script>
 	</body>
 </html>
