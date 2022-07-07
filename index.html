@@ -16,6 +16,7 @@
 		<img style="display: none;" src="red.png" id="red" />
 		<img style="display: none;" src="blue.png" id="blue" />
 		<img style="display: none;" src="green.png" id="green" />
+		<img style="display: none;" src="stone.png" id="stone" />
 		<canvas></canvas>
 		<script>
 			function checkRectOverlap(rect1, rect2) {
@@ -43,6 +44,20 @@
 					//if((ox + ow >= this.x && oy + oh >= this.y && ox + ow <= this.x + this.w && oy + oh <= this.y + this.h) || (ox >= this.x && oy >= this.y && ox <= this.x + this.w && oy <= this.y + this.h))
 					
 					if(checkRectOverlap([[this.x, this.y],[this.x + this.w, this.y + this.h]],[[ox, oy],[ox + ow, oy + oh]]))
+						return true;
+					return false;
+				}
+			};
+			class Collectable {
+				constructor(x,y) {
+					this.x = x;
+					this.y = y;
+				}
+				
+				colliding(ox,oy,ow,oh) {
+					//if((ox + ow >= this.x && oy + oh >= this.y && ox + ow <= this.x + this.w && oy + oh <= this.y + this.h) || (ox >= this.x && oy >= this.y && ox <= this.x + this.w && oy <= this.y + this.h))
+					
+					if(checkRectOverlap([[this.x, this.y],[this.x + 5, this.y + 5]],[[ox, oy],[ox + ow, oy + oh]]))
 						return true;
 					return false;
 				}
@@ -125,6 +140,9 @@
 				}
 			};
 			
+			let score = 0;
+			let animationFrame = 0;
+			let animationFrameDirection = 2;
 			let canvas = document.getElementsByTagName("canvas")[0];
 			let ctx = canvas.getContext("2d");
 			ctx.canvas.width = screen.availWidth;
@@ -132,11 +150,41 @@
 			
 			document.addEventListener("keydown", kde);
 			
+			let collectables = [];
+			for(i = 0; i < 150; i++) {
+				let x = 0;
+				let y = 0;
+				checkLoc = false;
+				while(!checkLoc) {
+					x = Math.floor(Math.random() * canvas.width / 80) * 80 + 50;
+					y = Math.floor(Math.random() * canvas.height / 80) * 80 + 50;
+					
+					let contin = false;
+					
+					collectables.forEach(c => {
+						if(c.colliding(x-20,y-20,40,40)) {
+							checkLoc = false;
+							contin = true;
+						}
+					});
+					
+					if(x >= 80 && x <= 160 && y >= 80 && y <= 160){
+						checkLoc = false;
+						continue;
+					}
+					
+					if(contin)
+						continue;
+					
+					checkLoc = true;
+				}
+				collectables.push(new Collectable(x,y));
+			}
 			let walls = [new Object(0,0,canvas.width,20),new Object(0,0,20,canvas.height),new Object(0,canvas.height - 20,canvas.width,20),new Object(canvas.width - 20,0,20,canvas.height),new Object(80,80,20,canvas.height-160),new Object(canvas.width-160,80,20,canvas.height-160),new Object(160,160,canvas.width-400,20),new Object(160,canvas.height-160,canvas.width-400,20),new Object(160,240,20,canvas.height-480),new Object(canvas.width-260,240,20,canvas.height-480),new Object(240,240,canvas.width-560,20),new Object(240,canvas.height-260,canvas.width-560,20),new Object(240,400,canvas.width-560,20),new Object(240,canvas.height-420,canvas.width-560,20)];
 			let player = new PC(100,100);
-			let ghost1 = new NPC(Math.random() * canvas.width, Math.random() * canvas.height);
-			let ghost2 = new NPC(Math.random() * canvas.width, Math.random() * canvas.height);
-			let ghost3 = new NPC(Math.random() * canvas.width, Math.random() * canvas.height);
+			let ghost1 = new NPC(Math.floor(Math.random() * (canvas.width - 80) / 160) * 160 + 40, Math.floor(Math.random() * (canvas.height - 80) / 160) * 160 + 40);
+			let ghost2 = new NPC(Math.floor(Math.random() * (canvas.width - 80) / 160) * 160 + 40, Math.floor(Math.random() * (canvas.height - 80) / 160) * 160 + 40);
+			let ghost3 = new NPC(Math.floor(Math.random() * (canvas.width - 80) / 160) * 160 + 40, Math.floor(Math.random() * (canvas.height - 80) / 160) * 160 + 40);
 			
 			function check(x,y,w,h) {
 				let res = true;
@@ -145,6 +193,11 @@
 						res = false;
 				});
 				return res;
+			}
+			
+			function collectObject(collect) {
+				collectables.splice(collectables.indexOf(collect), 1);
+				score += 50;
 			}
 			
 			function kde(e) {
@@ -159,12 +212,23 @@
 			}
 			
 			function drawAll() {
-				ctx.clearRect(0,0,canvas.width,canvas.height);
+				ctx.fillStyle = "#304050";
+				ctx.fillRect(0,0,canvas.width,canvas.height);
+				
+				var stone = document.getElementById("stone");
+				let pat = ctx.createPattern(stone, 'repeat');
 				
 				walls.forEach((wall) => {
 					ctx.beginPath();
-					ctx.fillStyle = "#333333";
+					ctx.fillStyle = pat;
 					ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
+				});
+				
+				collectables.forEach((collect) => {
+					ctx.beginPath();
+					ctx.fillStyle = "#FFFF00";
+					ctx.arc(collect.x, collect.y, 3, 0, 2 * Math.PI, false);
+					ctx.fill();
 				});
 				
 				ctx.beginPath();
@@ -173,10 +237,10 @@
 				ctx.fill();
 				
 				ctx.beginPath();
-				ctx.fillStyle = "#FFFFFF";
+				ctx.fillStyle = "#304050";
 				ctx.moveTo(player.x + 20,player.y + 20);
-				ctx.lineTo(player.x + 40, player.y + 10);
-				ctx.lineTo(player.x + 40, player.y + 30);
+				ctx.lineTo(player.x + 40, player.y + animationFrame);
+				ctx.lineTo(player.x + 40, player.y + 40 - animationFrame);
 				ctx.fill();
 				
 				var red_g = document.getElementById("red");
@@ -189,6 +253,20 @@
 				ctx.drawImage(blue_g, ghost2.x, ghost2.y, 40,40);
 				ctx.beginPath();
 				ctx.drawImage(green_g, ghost3.x, ghost3.y, 40,40);
+				
+				ctx.globalAlpha = 0.7;
+				//ctx.beginPath();
+				ctx.fillStyle = "#223333";
+				ctx.fillRect(0,10,120,25);
+				ctx.globalAlpha = 1.0;
+				ctx.fillStyle = "#FFFFFF";
+				ctx.font = "20px Arial";
+				ctx.fillText(`Score: ${score}`, 0, 30);
+				
+				animationFrame+=animationFrameDirection;
+				if(animationFrame >= 20 || animationFrame <= 0) {
+					animationFrameDirection *= -1;
+				}
 			}
 			
 			setInterval((e) => {
@@ -202,6 +280,12 @@
 				ghost2.move();
 				ghost3.move();
 				player.move();
+				
+				collectables.forEach(c => {
+					if(c.colliding(player.x,player.y,40,40))
+						collectObject(c);
+				});
+				
 				drawAll();
 			}, 100);
 		</script>
