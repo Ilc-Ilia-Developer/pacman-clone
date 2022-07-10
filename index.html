@@ -10,6 +10,16 @@
 				height: 100%;
 				background-color: transparent;
 			}
+			#gameover {
+				display: none;
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background-color: rgba(1,1,1,0.5);
+				color: gold;
+			}
 		</style>
 	</head>
 	<body>
@@ -18,15 +28,25 @@
 		<img style="display: none;" src="green.png" id="green" />
 		<img style="display: none;" src="stone.png" id="stone" />
 		<canvas></canvas>
+		<div id="gameover">
+			<center>
+				<h1>Game Over</h1>
+				<h3>You ????</h3>
+				<h3>Score: 0</h3>
+			</center>
+		</div>
 		<script>
+			let gameOver = false;
+			let win = false;
+			
 			function checkRectOverlap(rect1, rect2) {
-				if ((rect1[0][0] < rect2[0][0] && rect2[0][0] < rect1[1][0]) //Event that x3 is inbetween x1 and x2
-					|| (rect1[0][0] < rect2[1][0] && rect2[1][0] < rect1[1][0]) //Event that x4 is inbetween x1 and x2
-					|| (rect2[0][0] < rect1[0][0] && rect1[1][0] < rect2[1][0])) {  //Event that x1 and x2 are inbetween x3 and x4
+				if ((rect1[0][0] <= rect2[0][0] && rect2[0][0] <= rect1[1][0])
+					|| (rect1[0][0] <= rect2[1][0] && rect2[1][0] <= rect1[1][0])
+					|| (rect2[0][0] <= rect1[0][0] && rect1[1][0] <= rect2[1][0])) {
 
-						if ((rect1[0][1] < rect2[0][1] && rect2[0][1] < rect1[1][1]) //Event that y3 is between y1 and y2
-						|| (rect1[0][1] < rect2[1][1] && rect2[1][1] < rect1[1][1]) //Event that y4 is between y1 and y2
-						|| (rect2[0][1] < rect1[0][1] && rect1[1][1] < rect2[1][1])) { //Event that y1 and y2 are between y3 and y4
+						if ((rect1[0][1] <= rect2[0][1] && rect2[0][1] <= rect1[1][1])
+						|| (rect1[0][1] <= rect2[1][1] && rect2[1][1] <= rect1[1][1])
+						|| (rect2[0][1] <= rect1[0][1] && rect1[1][1] <= rect2[1][1])) {
 						return true;
 					}
 				}
@@ -41,8 +61,6 @@
 				}
 				
 				colliding(ox,oy,ow,oh) {
-					//if((ox + ow >= this.x && oy + oh >= this.y && ox + ow <= this.x + this.w && oy + oh <= this.y + this.h) || (ox >= this.x && oy >= this.y && ox <= this.x + this.w && oy <= this.y + this.h))
-					
 					if(checkRectOverlap([[this.x, this.y],[this.x + this.w, this.y + this.h]],[[ox, oy],[ox + ow, oy + oh]]))
 						return true;
 					return false;
@@ -55,8 +73,6 @@
 				}
 				
 				colliding(ox,oy,ow,oh) {
-					//if((ox + ow >= this.x && oy + oh >= this.y && ox + ow <= this.x + this.w && oy + oh <= this.y + this.h) || (ox >= this.x && oy >= this.y && ox <= this.x + this.w && oy <= this.y + this.h))
-					
 					if(checkRectOverlap([[this.x, this.y],[this.x + 5, this.y + 5]],[[ox, oy],[ox + ow, oy + oh]]))
 						return true;
 					return false;
@@ -92,50 +108,37 @@
 				}
 			};
 			class NPC {
-				constructor(x,y) {
+				constructor(x,y,s) {
 					this.x = x;
 					this.y = y;
-					this.direction = Math.floor(Math.random() * 4);
+					this.s = s;
+					
+					while(!check(this.x-5,this.y-5,50,50)) {
+						this.x += 5;
+					}
+					
+					this.direction = 2;
 				}
 				
 				changeDirection() {
-					let c = false;
-					if(this.direction == 0) {
-						if(check(this.x + 5, this.y, 40, 40))
-							c = true;
-					}
-					else if(this.direction == 1) {
-						if(check(this.x, this.y + 5, 40, 40))
-						c = true;
-					}
-					else if(this.direction == 2) {
-						if(check(this.x - 5, this.y, 40, 40))
-							c = true;
-						}
-					else if(this.direction == 3) {
-						if(check(this.x, this.y - 5, 40, 40))
-							c = true;
-					}
-					
-					if(!c)
-						this.direction = Math.floor(Math.random() * 4);
+					this.direction = nextPathFindDirection(this.x,this.y,player.x,player.y);
 				}
 				move() {
 					if(this.direction == 0) {
-						if(check(this.x + 5, this.y, 40, 40))
-							this.x += 5;
+						if(check(this.x + this.s, this.y, 40, 40))
+							this.x += this.s;
 					}
 					else if(this.direction == 1) {
-						if(check(this.x, this.y + 5, 40, 40))
-							this.y += 5;
+						if(check(this.x, this.y + this.s, 40, 40))
+							this.y += this.s;
 					}
 					else if(this.direction == 2) {
-						if(check(this.x - 5, this.y, 40, 40))
-							this.x -= 5;
+						if(check(this.x - this.s, this.y, 40, 40))
+							this.x -= this.s;
 					}
 					else if(this.direction == 3) {
-						if(check(this.x, this.y - 5, 40, 40))
-							this.y -= 5;
+						if(check(this.x, this.y - this.s, 40, 40))
+							this.y -= this.s;
 					}
 				}
 			};
@@ -151,7 +154,7 @@
 			document.addEventListener("keydown", kde);
 			
 			let collectables = [];
-			for(i = 0; i < 150; i++) {
+			for(i = 0; i < 50; i++) {
 				let x = 0;
 				let y = 0;
 				checkLoc = false;
@@ -182,9 +185,9 @@
 			}
 			let walls = [new Object(0,0,canvas.width,20),new Object(0,0,20,canvas.height),new Object(0,canvas.height - 20,canvas.width,20),new Object(canvas.width - 20,0,20,canvas.height),new Object(80,80,20,canvas.height-160),new Object(canvas.width-160,80,20,canvas.height-160),new Object(160,160,canvas.width-400,20),new Object(160,canvas.height-160,canvas.width-400,20),new Object(160,240,20,canvas.height-480),new Object(canvas.width-260,240,20,canvas.height-480),new Object(240,240,canvas.width-560,20),new Object(240,canvas.height-260,canvas.width-560,20),new Object(240,400,canvas.width-560,20),new Object(240,canvas.height-420,canvas.width-560,20)];
 			let player = new PC(100,100);
-			let ghost1 = new NPC(Math.floor(Math.random() * (canvas.width - 80) / 160) * 160 + 40, Math.floor(Math.random() * (canvas.height - 80) / 160) * 160 + 40);
-			let ghost2 = new NPC(Math.floor(Math.random() * (canvas.width - 80) / 160) * 160 + 40, Math.floor(Math.random() * (canvas.height - 80) / 160) * 160 + 40);
-			let ghost3 = new NPC(Math.floor(Math.random() * (canvas.width - 80) / 160) * 160 + 40, Math.floor(Math.random() * (canvas.height - 80) / 160) * 160 + 40);
+			let ghost1 = new NPC(Math.floor(Math.random() * (canvas.width - 80) / 160) * 160 + 40, Math.floor(Math.random() * (canvas.height - 80) / 160) * 160 + 40, 6);
+			let ghost2 = new NPC(Math.floor(Math.random() * (canvas.width - 80) / 160) * 160 + 40, Math.floor(Math.random() * (canvas.height - 80) / 160) * 160 + 40, 5);
+			let ghost3 = new NPC(Math.floor(Math.random() * (canvas.width - 80) / 160) * 160 + 40, Math.floor(Math.random() * (canvas.height - 80) / 160) * 160 + 40, 4);
 			
 			function check(x,y,w,h) {
 				let res = true;
@@ -198,6 +201,85 @@
 			function collectObject(collect) {
 				collectables.splice(collectables.indexOf(collect), 1);
 				score += 50;
+			}
+			
+			function nextPathFindDirection(sx,sy,gx,gy) {
+				let x = gx - sx;
+				let y = gy - sy;
+				
+				
+				if(player.direction == 1 && gx != sx && Math.abs(x) < 200)
+					y = x + 1;
+				else if(player.direction == 3 && gx != sx && Math.abs(x) < 200)
+					y = -x - 1;
+				
+				if(player.direction == 0 && gy != sy && Math.abs(y) < 200)
+					x = y + 1;
+				else if(player.direction == 2 && gy != sy && Math.abs(y) < 200)
+					x = -y - 1;
+				
+				
+				if(x > y)
+					if(check(sx + 10, sy, 40, 40))
+						return 0;
+					else if(check(sx, sy + 10, 40, 40) && y > 0)
+						return 1;
+					else if(check(sx, sy - 10, 40, 40) && y < 0)
+						return 3;
+					else return 2;
+				if(x < y)
+					if(check(sx - 10, sy, 40, 40))
+						return 2;
+					else if(check(sx, sy + 10, 40, 40) && y > 0)
+						return 1;
+					else if(check(sx, sy - 10, 40, 40) && y < 0)
+						return 3;
+					else return 0;
+				if(y > x)
+					if(check(sx, sy + 10, 40, 40))
+						return 1;
+					else if(check(sx + 10, sy, 40, 40) && y > 0)
+						return 0;
+					else if(check(sx - 10, sy, 40, 40) && y < 0)
+						return 2;
+					else return 3;
+				if(y < x)
+					if(check(sx, sy - 10, 40, 40))
+						return 3;
+					else if(check(sx + 10, sy, 40, 40) && y > 0)
+						return 0;
+					else if(check(sx - 10, sy, 40, 40) && y < 0)
+						return 2;
+					else return 1;
+				
+			}
+			
+			function checkGameOver() {
+				if(collectables.length == 0)
+				{
+					win = true;
+					gameOver = true;
+				}
+				else if(checkRectOverlap([[player.x, player.y],[player.x + 40, player.y + 40]],[[ghost1.x, ghost1.y],[ghost1.x + 40, ghost1.y + 40]])) {
+					win = false;
+					gameOver = true;
+				}
+				else if(checkRectOverlap([[player.x, player.y],[player.x + 40, player.y + 40]],[[ghost2.x, ghost2.y],[ghost2.x + 40, ghost2.y + 40]])) {
+					win = false;
+					gameOver = true;
+				}
+				else if(checkRectOverlap([[player.x, player.y],[player.x + 40, player.y + 40]],[[ghost3.x, ghost3.y],[ghost3.x + 40, ghost3.y + 40]])) {
+					win = false;
+					gameOver = true;
+				}
+				
+				if(gameOver) {
+					let gos = document.getElementById("gameover");
+					gos.style = "display: block";
+					
+					gos.getElementsByTagName("h3")[0].innerHTML = (win ? "You won!" : "You lost!");
+					gos.getElementsByTagName("h3")[1].innerHTML = "Score: " + score;
+				}
 			}
 			
 			function kde(e) {
@@ -270,23 +352,25 @@
 			}
 			
 			setInterval((e) => {
-			}, 1500);
-			setInterval((e) => {
-				ghost1.changeDirection();
-				ghost2.changeDirection();
-				ghost3.changeDirection();
+				checkGameOver();
 				
-				ghost1.move();
-				ghost2.move();
-				ghost3.move();
-				player.move();
-				
-				collectables.forEach(c => {
-					if(c.colliding(player.x,player.y,40,40))
-						collectObject(c);
-				});
-				
-				drawAll();
+				if(!gameOver) {
+					ghost1.changeDirection();
+					ghost2.changeDirection();
+					ghost3.changeDirection();
+					
+					ghost1.move();
+					ghost2.move();
+					ghost3.move();
+					player.move();
+					
+					collectables.forEach(c => {
+						if(c.colliding(player.x,player.y,40,40))
+							collectObject(c);
+					});
+					
+					drawAll();
+				}
 			}, 100);
 		</script>
 	</body>
